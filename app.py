@@ -25,9 +25,10 @@ def load_from_local_storage():
 
     if (freeUses !== null && paidUses !== null) {
         const url = new URL (window.location.href);
-        url.searchParams.set('_free_uses', freeUses);
-        url.searchParams.set('_paid_uses', paidUses);
+        url.searchParams.set('free', freeUses);
+        url.searchParams.set('paid', paidUses);
         window.history.replaceState({}, '', url);
+        console.log('loaded: free' + freeUses + ', paid=' + paidUses);
         }
     </script>
     """, unsafe_allow_html=True)
