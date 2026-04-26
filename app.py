@@ -28,7 +28,6 @@ try:
     STRIPE_READY = True
 except:
     STRIPE_READY = False
-    st.warning("free version 3 uses available")
 if 'free_uses_left'  not in st.session_state:
     st.session_state['free_uses_left'] = saved_free
 if 'paid_uses' not in st.session_state:
@@ -164,12 +163,14 @@ if uploaded_file is not None:
     else:
         st.error(f"no uses left pay ${PRICE_PER_USE} FOR 1 USE")
         st.markdown(f'''
-                    <a href="{PAYMENT_LINK}" target="_blank"style="text-decoration: none;">
-                        <button style= "background-color: #4CAF50;"> pay ${PRICE_PER_USE}
-                        </button>
-                    </a>
-                        ''', unsafe_allow_html=True)
-        st.info(""" click the button above to purchase""")
+                    <div style="display=flex; justify-content: center; margin: 20px 0;">
+                        <a href="{PAYMENT_LINK}" target="_blank"style="text-decoration: none;">
+                            <button style= "background-color: #4CAF50;"> pay ${PRICE_PER_USE}
+                            </button>
+                        </a>
+                    </div>
+                            ''', unsafe_allow_html=True)
+            st.info(""" click the button above to purchase""")
                         
 else:
     st.info('Please upload a CSV or Excel file to get started.')
