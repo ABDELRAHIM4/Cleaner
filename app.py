@@ -15,7 +15,7 @@ def save_to_local_storage(free_uses, paid_uses):
         console.log('Saved: free={free_uses}, paid={paid_uses}');
     </script>
     """
-    st.components.v1.html(js_code, height=0)
+    st.iframe(js_code, height=0)
     
 def load_from_local_storage():
     js_code= """
@@ -31,7 +31,7 @@ def load_from_local_storage():
         }
     </script>
     """
-    st.components.v1.html(js_code, height=0)
+    st.iframe(js_code, height=0)
     
 load_from_local_storage()
 
@@ -116,6 +116,7 @@ def check_payment_status():
     if query_params.get("payment") == ['success']:
         st.session_state['paid_uses'] += 1
         st.success("payment successful you have 1 paid use now")
+        save_to_local_storage(st.session_state['free_uses_left'], st.session_state['paid_uses'])
         st.query_params.clear()
         st.rerun()
     elif query_params.get("payment") == ['cancel']:
