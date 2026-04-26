@@ -36,14 +36,16 @@ STRIPE_READY = False
 PAYMENT_LINK = "https://buy.stripe.com/test_eVq5kFakObqqaMDafOdfG01"
 PRICE = 0.50
 query_params = st.query_params
+has_url_data = False
 try:
-    saved_free = int(query_params.get("free", [3])[0])
-    saved_paid = int(query_params.get("paid", [0])[0])
-    if saved_free is None:
-        raise ValueError
+    saved_free = int(query_params.get("free", [None])[0])
+    saved_paid = int(query_params.get("paid", [None])[0])
+    if saved_free is not None and saved_paid is not None:
+        has_url_data = True
 except:
     saved_free = None
     saved_paid = None
+if not has_url_data:
     load_from_local_storage()
     st.rerun()
 if query_params.get("_paid_uses"):
