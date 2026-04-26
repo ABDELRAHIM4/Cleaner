@@ -27,8 +27,7 @@ def load_from_local_storage():
         const url = new URL (window.location.href);
         url.searchParams.set('free', freeUses);
         url.searchParams.set('paid', paidUses);
-        window.history.replaceState({}, '', url);
-        console.log('loaded: free' + freeUses + ', paid=' + paidUses);
+        window.location.href = url.toString();
         }
     </script>
     """, unsafe_allow_html=True)
@@ -40,9 +39,13 @@ query_params = st.query_params
 try:
     saved_free = int(query_params.get("free", [3])[0])
     saved_paid = int(query_params.get("paid", [0])[0])
+    if saved_free is None:
+        raise ValueError
 except:
-    saved_free = 3
-    saved_paid = 0
+    saved_free = None
+    saved_paid = None
+    load_from_local_storage()
+    st.rerun()
 if query_params.get("_paid_uses"):
     st.query_params.clear()
 
@@ -193,7 +196,7 @@ if uploaded_file is not None:
     else:
         st.error(f"no uses left pay ${PRICE_PER_USE} FOR 1 USE")
         st.markdown(f'''
-                    <div style="display=flex; justify-content: center; margin: 20px 0;">
+                    <div style="display: flex; justify-content: center; margin: 20px 0;">
                         <a href="{PAYMENT_LINK}" target="_blank"style="text-decoration: none;">
                             <button style= "background-color: #4CAF50;"> pay ${PRICE_PER_USE}
                             </button>
