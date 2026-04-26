@@ -51,7 +51,12 @@ with col3:
     if STRIPE_READY:
         st.metric("price per use", f"{PRICE_PER_USE}")
     else:
-        st.metric("version", "free")
+        if st.session_state['free_uses_left'] > 0:
+            st.metric("status", "freedemo")
+        elif st.session_state['paid_uses'] > 0:
+            st.metric("status", "has credits")
+        else:
+            st.metric("status", "needs payment")
 with col4:
     total_uses= st.session_state['free_uses_left'] + st.session_state['paid_uses']
     st.metric("total uses", total_uses)
