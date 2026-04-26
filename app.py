@@ -170,7 +170,7 @@ if uploaded_file is not None:
                         </a>
                     </div>
                             ''', unsafe_allow_html=True)
-            st.info(""" click the button above to purchase""")
+        st.info(""" click the button above to purchase""")
                         
 else:
     st.info('Please upload a CSV or Excel file to get started.')
