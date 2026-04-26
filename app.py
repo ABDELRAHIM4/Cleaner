@@ -8,7 +8,30 @@ st.markdown('''
 This app allows you to clean your CSV files by removing empty rows and columns, and filling missing values with a specified value.
 ''')
 
+def save_to_local_storage(free_uses, paid_uses):
+    st.markdown( f"""
+    <script>
+        localStorage.setItem('csv_cleaner_free_uses', '{free_uses}');
+        localStorage.setItem('csv_cleaner_paid_uses', '{paid_uses}');
+        console.log('Saved: free={free_uses}, paid={paid_uses}');
+    </script>
+    """, unsafe_allow_html=True)
+    
+def load_from_local_storage():
+    st.markdown("""
+    <script>
+    const freeUses = localStorage.getItem('csv_cleaner_free_uses');
+    const paidUses = localStorage.getItem('csv_cleaner_paid_uses');
 
+    if (freeUses !== null && paidUses !== null) {
+        const url = new URL (window.location.href);
+        url.searchParams.set('_free_uses', freeUses);
+        url.searchParams.set('_paid_uses', paidUses);
+        window.history.replaceState({}, '', url);
+        }
+    </script>
+    """, unsafe_allow_html=True)
+load_from_local_storage()
 STRIPE_READY = False
 PAYMENT_LINK = "https://buy.stripe.com/test_eVq5kFakObqqaMDafOdfG01"
 PRICE = 0.50
@@ -39,6 +62,7 @@ def update_url():
         "free": st.session_state['free_uses_left'],
         "paid": st.session_state['paid_uses']
     })
+    save_to_local_storage(st.session_state['free_uses_left'], st.session_state['paid_uses'])
     
 PRICE_PER_USE = 0.50
 PRICE_IN_CENTS = 50
