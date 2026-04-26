@@ -56,7 +56,7 @@ with col3:
         elif st.session_state['paid_uses'] > 0:
             st.metric("status", "has credits")
         else:
-            st.metric("status", "needs payment")
+            st.metric("status", "need to pay")
 with col4:
     total_uses= st.session_state['free_uses_left'] + st.session_state['paid_uses']
     st.metric("total uses", total_uses)
