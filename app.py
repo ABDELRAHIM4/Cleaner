@@ -8,17 +8,16 @@ st.markdown('''
 This app allows you to clean your CSV files by removing empty rows and columns, and filling missing values with a specified value.
 ''')
 def save_to_local_storage(free_uses, paid_uses):
-    js_code = f"""
+    st.markdown( f"""
     <script>
         localStorage.setItem('csv_cleaner_free_uses', '{free_uses}');
         localStorage.setItem('csv_cleaner_paid_uses', '{paid_uses}');
         console.log('Saved: free={free_uses}, paid={paid_uses}');
     </script>
-    """
-    st.iframe(js_code, height=0)
+    """, unsafe_allow_html=True)
     
 def load_from_local_storage():
-    js_code= """
+    st.markdown("""
     <script>
     const freeUses = localStorage.getItem('csv_cleaner_free_uses');
     const paidUses = localStorage.getItem('csv_cleaner_paid_uses');
@@ -30,9 +29,7 @@ def load_from_local_storage():
         window.history.replaceState({}, '', url);
         }
     </script>
-    """
-    st.iframe(js_code, height=0)
-    
+    """, unsafe_allow_html=True)
 load_from_local_storage()
 
 STRIPE_READY = False
