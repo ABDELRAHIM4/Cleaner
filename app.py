@@ -7,38 +7,15 @@ st.title('CSV Cleaner :smiley:')
 st.markdown('''
 This app allows you to clean your CSV files by removing empty rows and columns, and filling missing values with a specified value.
 ''')
-def save_to_local_storage(free_uses, paid_uses):
-    st.markdown( f"""
-    <script>
-        localStorage.setItem('csv_cleaner_free_uses', '{free_uses}');
-        localStorage.setItem('csv_cleaner_paid_uses', '{paid_uses}');
-        console.log('Saved: free={free_uses}, paid={paid_uses}');
-    </script>
-    """, unsafe_allow_html=True)
-    
-def load_from_local_storage():
-    st.markdown("""
-    <script>
-    const freeUses = localStorage.getItem('csv_cleaner_free_uses');
-    const paidUses = localStorage.getItem('csv_cleaner_paid_uses');
 
-    if (freeUses !== null && paidUses !== null) {
-        const url = new URL (window.location.href);
-        url.searchParams.set('_free_uses', freeUses);
-        url.searchParams.set('_paid_uses', paidUses);
-        window.history.replaceState({}, '', url);
-        }
-    </script>
-    """, unsafe_allow_html=True)
-load_from_local_storage()
 
 STRIPE_READY = False
 PAYMENT_LINK = "https://buy.stripe.com/test_eVq5kFakObqqaMDafOdfG01"
 PRICE = 0.50
 query_params = st.query_params
 try:
-    saved_free = int(query_params.get("_free_uses", [3])[0])
-    saved_paid = int(query_params.get("_paid_uses", [0])[0])
+    saved_free = int(query_params.get("free", [3])[0])
+    saved_paid = int(query_params.get("paid", [0])[0])
 except:
     saved_free = 3
     saved_paid = 0
@@ -58,6 +35,12 @@ if 'paid_uses' not in st.session_state:
     st.session_state['paid_uses'] = saved_paid
 if 'processing_completed' not in st.session_state:
     st.session_state['processing_completed'] = False
+def update_url():
+    st.query_params.update({
+        "free": st.session_state['free_uses_left'],
+        "paid": st.session_state['paid_uses']
+    })
+    
 PRICE_PER_USE = 0.50
 PRICE_IN_CENTS = 50
 col1, col2, col3, col4 = st.columns(4)
@@ -73,7 +56,7 @@ with col3:
 with col4:
     total_uses= st.session_state['free_uses_left'] + st.session_state['paid_uses']
     st.metric("total uses", total_uses)
-save_to_local_storage(st.session_state['free_uses_left'], st.session_state['paid_uses'])
+
 st.markdown("---")
 
 
@@ -84,6 +67,8 @@ def create_checkout_session():
         st.error("not ready")
         return None
     try:
+        current_free = st.session_state['free_uses_left']
+        current_paid = st.session_state['paid_uses']
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -100,9 +85,9 @@ def create_checkout_session():
             }],
             mode='payment',
             success_url = st.secrets.get('app_url', "https://filecleanercsv.streamlit.app/")
-            + "?payment=success",
+            + f"?free={current_free}&paid={current_paid}&payment=success",
             cancel_url = st.secrets.get('app_url', "https://filecleanercsv.streamlit.app/")
-            + "?payment=cancel",
+            + f"?free={current_free}&paid={current_paid}&payment=cancel",
         )
         return session.url
     except Exception as e:
@@ -113,7 +98,7 @@ def check_payment_status():
     if query_params.get("payment") == ['success']:
         st.session_state['paid_uses'] += 1
         st.success("payment successful you have 1 paid use now")
-        save_to_local_storage(st.session_state['free_uses_left'], st.session_state['paid_uses'])
+        update_url()
         st.query_params.clear()
         st.rerun()
     elif query_params.get("payment") == ['cancel']:
@@ -138,8 +123,8 @@ if uploaded_file is not None:
     elif clean_missing == "Fill with Unknown":
         df = df.fillna("Unknown")
     elif clean_missing == "Drop Rows/Columns":
-        df = df.dropna(how='all')  # Drop empty rows
-        df = df.dropna(how='all', axis=1)  # Drop empty columns
+        df = df.dropna(how='all')
+        df = df.dropna(how='all', axis=1)
     else:
         st.warning("Please select a method to handle missing values.")
 
@@ -172,17 +157,18 @@ if uploaded_file is not None:
             elif st.session_state['paid_uses'] > 0:
                 st.session_state['paid_uses'] -= 1
                 st.success(f"{st.session_state['paid_uses']} paid uses left")
-            save_to_local_storage(st.session_state['free_uses_left'], st.session_state['paid_uses'])
+            update_url()
             st.balloons()
             st.rerun()
+            
     else:
         st.error(f"no uses left pay ${PRICE_PER_USE} FOR 1 USE")
-        st.components.v1.html(f'''
+        st.markdown(f'''
                     <a href="{PAYMENT_LINK}" target="_blank"style="text-decoration: none;">
                         <button style= "background-color: #4CAF50;"> pay ${PRICE_PER_USE}
                         </button>
                     </a>
-                        ''', height=80)
+                        ''', unsafe_allow_html=True)
         st.info(""" click the button above to purchase""")
                         
 else:
