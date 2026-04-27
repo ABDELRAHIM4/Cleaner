@@ -17,7 +17,7 @@ def save_to_local_storage(free_uses, paid_uses):
         console.log('Saved: free={free_uses}, paid={paid_uses}');
     </script>
     """, unsafe_allow_html=True)
-    
+
 def load_from_local_storage():
     st.markdown("""
     <script>
@@ -32,23 +32,22 @@ def load_from_local_storage():
         }
     </script>
     """, unsafe_allow_html=True)
-load_from_local_storage()
+
 STRIPE_READY = False
 PAYMENT_LINK = "https://buy.stripe.com/test_eVq5kFakObqqaMDafOdfG01"
 PRICE = 0.50
 query_params = st.query_params
 has_url_data = False
 try:
-    saved_free = int(query_params.get("free", [None])[0])
-    saved_paid = int(query_params.get("paid", [None])[0])
+    saved_free = int(query_params.get("free", 3))
+    saved_paid = int(query_params.get("paid", 0))
     if saved_free is not None and saved_paid is not None:
         has_url_data = True
 except:
-    saved_free = None
-    saved_paid = None
+    saved_free = 3
+    saved_paid = 0
 if not has_url_data:
     load_from_local_storage()
-    st.rerun()
 if query_params.get("_paid_uses"):
     st.query_params.clear()
 
@@ -93,10 +92,6 @@ with col4:
     st.metric("total uses", total_uses)
 
 st.markdown("---")
-
-
-
-
 def create_checkout_session():
     if not STRIPE_READY:
         st.error("not ready")
@@ -130,13 +125,13 @@ def create_checkout_session():
         return None
 def check_payment_status():
     query_params = st.query_params
-    if query_params.get("payment") == ['success']:
+    if query_params.get("payment") == 'success':
         st.session_state['paid_uses'] += 1
         st.success("payment successful you have 1 paid use now")
         update_url()
         st.query_params.clear()
         st.rerun()
-    elif query_params.get("payment") == ['cancel']:
+    elif query_params.get("payment") == 'cancel':
         st.info("payment cancelled")
         st.query_params.clear()
 check_payment_status()
@@ -198,14 +193,12 @@ if uploaded_file is not None:
             
     else:
         st.error(f"no uses left pay ${PRICE_PER_USE} FOR 1 USE")
-        st.markdown(f'''
-                    <div style="display: flex; justify-content: center; margin: 20px 0;">
-                        <a href="{PAYMENT_LINK}" target="_blank"style="text-decoration: none;">
-                            <button style= "background-color: #4CAF50;"> pay ${PRICE_PER_USE}
-                            </button>
-                        </a>
-                    </div>
-                            ''', unsafe_allow_html=True)
+        checkout_url = create_checkout_session()
+        if chechout_url:
+            st.link_button(
+                f"pay {${PRICE_PER_USE}",
+                checkout_url
+            )
         st.info(""" click the button above to purchase""")
                         
 else:
