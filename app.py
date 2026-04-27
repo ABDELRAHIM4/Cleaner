@@ -7,7 +7,8 @@ st.title('CSV Cleaner :smiley:')
 st.markdown('''
 This app allows you to clean your CSV files by removing empty rows and columns, and filling missing values with a specified value.
 ''')
-
+if 'initialized' not in st.session_state:
+    st.session_state['initialized'] = False
 def save_to_local_storage(free_uses, paid_uses):
     st.markdown( f"""
     <script>
