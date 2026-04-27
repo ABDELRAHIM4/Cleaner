@@ -196,7 +196,7 @@ if uploaded_file is not None:
         checkout_url = create_checkout_session()
         if chechout_url:
             st.link_button(
-                f"pay {${PRICE_PER_USE}",
+                f"pay ${PRICE_PER_USE}",
                 checkout_url
             )
         st.info(""" click the button above to purchase""")
