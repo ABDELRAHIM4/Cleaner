@@ -194,7 +194,7 @@ if uploaded_file is not None:
     else:
         st.error(f"no uses left pay ${PRICE_PER_USE} FOR 1 USE")
         checkout_url = create_checkout_session()
-        if chechout_url:
+        if checkout_url:
             st.link_button(
                 f"pay ${PRICE_PER_USE}",
                 checkout_url
