@@ -1,14 +1,30 @@
 import streamlit as st
 import pandas as pd
 import stripe
+from pymongo import MongoClient
+import uuid
+
+client = MongoClient(st.secrets['mongo_uri'])
+db = client['csv_cleaner']
+users_collection = db['users']
 
 st.set_page_config(page_title="CSV Cleaner", page_icon=":smiley:")
 st.title('CSV Cleaner :smiley:')
 st.markdown('''
 This app allows you to clean your CSV files by removing empty rows and columns, and filling missing values with a specified value.
 ''')
-if 'initialized' not in st.session_state:
-    st.session_state['initialized'] = False
+if 'user_id' not in st.session_state:
+    st.session_state['user_id'] = str(uuid.uuid4())
+user_data = users_collection.find_one({"user_id": st.session_state['user_id']})
+if not user_data:
+    users_collection.insert_one({
+        "user_id": st.session_state['user_id'],
+        "free_uses_left": 3,
+        "paid_uses": 0
+    })
+    user_data = users_collection.find_one({"user_id": st.session_state['user_id']})
+st.session_state['free_uses_left'] = user_data['free_uses_left']
+st.session_state['paid_uses'] = user_data['paid_uses']
 def save_to_local_storage(free_uses, paid_uses):
     st.markdown( f"""
     <script>
@@ -36,20 +52,7 @@ def load_from_local_storage():
 STRIPE_READY = False
 PAYMENT_LINK = "https://buy.stripe.com/test_eVq5kFakObqqaMDafOdfG01"
 PRICE = 0.50
-query_params = st.query_params
-has_url_data = False
-try:
-    saved_free = int(query_params.get("free", 3))
-    saved_paid = int(query_params.get("paid", 0))
-    if saved_free is not None and saved_paid is not None:
-        has_url_data = True
-except:
-    saved_free = 3
-    saved_paid = 0
-if not has_url_data:
-    load_from_local_storage()
-if query_params.get("_paid_uses"):
-    st.query_params.clear()
+
 
 try:
     stripe.api_key = st.secrets["stripe_api_key"]
@@ -57,10 +60,7 @@ try:
     STRIPE_READY = True
 except:
     STRIPE_READY = False
-if 'free_uses_left'  not in st.session_state:
-    st.session_state['free_uses_left'] = saved_free
-if 'paid_uses' not in st.session_state:
-    st.session_state['paid_uses'] = saved_paid
+
 if 'processing_completed' not in st.session_state:
     st.session_state['processing_completed'] = False
 def update_url():
@@ -68,7 +68,7 @@ def update_url():
         "free": st.session_state['free_uses_left'],
         "paid": st.session_state['paid_uses']
     })
-    save_to_local_storage(st.session_state['free_uses_left'], st.session_state['paid_uses'])
+    
     
 PRICE_PER_USE = 0.50
 PRICE_IN_CENTS = 50
@@ -126,9 +126,12 @@ def create_checkout_session():
 def check_payment_status():
     query_params = st.query_params
     if query_params.get("payment") == 'success':
+        users_collection.update_one(
+            {"user_id": st.session_state['user_id']}
+            ,{"$inc": {"paid_uses": 1}}
+        )
         st.session_state['paid_uses'] += 1
         st.success("payment successful you have 1 paid use now")
-        update_url()
         st.query_params.clear()
         st.rerun()
     elif query_params.get("payment") == 'cancel':
@@ -182,12 +185,19 @@ if uploaded_file is not None:
         )
         if download_csv or download_excel:
             if st.session_state['free_uses_left'] > 0:
+               users_collection.update_one(
+            {"user_id": st.session_state['user_id']}
+            ,{"$inc": {"free_uses_left": -1}}
+        )
                st.session_state['free_uses_left'] -= 1
                st.success(f"{st.session_state['free_uses_left']} free uses left")
             elif st.session_state['paid_uses'] > 0:
+                users_collection.update_one(
+            {"user_id": st.session_state['user_id']}
+            ,{"$inc": {"paid_uses": -1}}
+                )
                 st.session_state['paid_uses'] -= 1
                 st.success(f"{st.session_state['paid_uses']} paid uses left")
-            update_url()
             st.balloons()
             st.rerun()
             
