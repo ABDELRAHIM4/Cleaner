@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import stripe
 from pymongo import MongoClient
-import uuid
+import uuid, platform, hashlib
 
 client = MongoClient(st.secrets['mongo_uri'])
 db = client['csv_cleaner']
@@ -29,14 +29,13 @@ if 'user_id' not in st.session_state:
                 }
                 </script>
                 """, unsafe_allow_html=True)
-   
-    st.session_state['user_id'] = st.query_params.get("user_id", [None])[0]
-    if not st.session_state['user_id']:
-        import hashlib
-        import time
-        unique_id = hashlib.md5(f'{time.time()}_{st.session_state}'.encode()).hexdigest()
-        st.session_state['user_id'] = unique_id
-        st.query_params['user_id'] = unique_id
+    user_id_from_url = st.query_params.get("user_id", [None])[0]
+    if user_id_from_url:
+        st.session_state['user_id'] = user_id_from_url
+    else:
+        system_info = f"{platform.node()}_{platform.system()}_{platform.release()}"
+        st.session_state['user_id'] = hashlib.md5(system_info.encode()).hexdigest()
+    
 user_data = users_collection.find_one({"user_id": st.session_state['user_id']})
 if not user_data:
     users_collection.insert_one({
