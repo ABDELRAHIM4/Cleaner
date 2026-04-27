@@ -14,7 +14,13 @@ st.markdown('''
 This app allows you to clean your CSV files by removing empty rows and columns, and filling missing values with a specified value.
 ''')
 if 'user_id' not in st.session_state:
-    st.session_state['user_id'] = str(uuid.uuid4())
+    st.session_state['user_id'] = st.query_params.get("user_id", [None])[0]
+    if not st.session_state['user_id']:
+        import hashlib
+        import time
+        unique_id = hashlib.md5(f'{time.time()}_{st.session_state}'.encode()).hexdigest()
+        st.session_state['user_id'] = unique_id
+        st.query_params['user_id'] = unique_id
 user_data = users_collection.find_one({"user_id": st.session_state['user_id']})
 if not user_data:
     users_collection.insert_one({
