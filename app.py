@@ -25,29 +25,9 @@ if not user_data:
     user_data = users_collection.find_one({"user_id": st.session_state['user_id']})
 st.session_state['free_uses_left'] = user_data['free_uses_left']
 st.session_state['paid_uses'] = user_data['paid_uses']
-def save_to_local_storage(free_uses, paid_uses):
-    st.markdown( f"""
-    <script>
-        localStorage.setItem('csv_cleaner_free_uses', '{free_uses}');
-        localStorage.setItem('csv_cleaner_paid_uses', '{paid_uses}');
-        console.log('Saved: free={free_uses}, paid={paid_uses}');
-    </script>
-    """, unsafe_allow_html=True)
 
-def load_from_local_storage():
-    st.markdown("""
-    <script>
-    const freeUses = localStorage.getItem('csv_cleaner_free_uses');
-    const paidUses = localStorage.getItem('csv_cleaner_paid_uses');
 
-    if (freeUses !== null && paidUses !== null) {
-        const url = new URL (window.location.href);
-        url.searchParams.set('free', freeUses);
-        url.searchParams.set('paid', paidUses);
-        window.location.href = url.toString();
-        }
-    </script>
-    """, unsafe_allow_html=True)
+
 
 STRIPE_READY = False
 PAYMENT_LINK = "https://buy.stripe.com/test_eVq5kFakObqqaMDafOdfG01"
@@ -63,11 +43,7 @@ except:
 
 if 'processing_completed' not in st.session_state:
     st.session_state['processing_completed'] = False
-def update_url():
-    st.query_params.update({
-        "free": st.session_state['free_uses_left'],
-        "paid": st.session_state['paid_uses']
-    })
+
     
     
 PRICE_PER_USE = 0.50
