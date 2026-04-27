@@ -14,6 +14,22 @@ st.markdown('''
 This app allows you to clean your CSV files by removing empty rows and columns, and filling missing values with a specified value.
 ''')
 if 'user_id' not in st.session_state:
+    # Try to get user_id from javascript cookies
+    st.markdown("""
+                <script>
+                let user_id = localStorage.getItem('csv_cleaner_user_id')
+                if (!user_id){
+                user_id = 'user_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('csv_cleaner_user_id', user_id);
+                }
+                const url = new URL(window.location.href);
+                if (!url.searchParams.get("user_id")){
+                url.searchParams.set("user_id", localStorage.getItem('csv_cleaner_user_id'));
+                window.location.href = url.toString();
+                }
+                </script>
+                """, unsafe_allow_html=True)
+   
     st.session_state['user_id'] = st.query_params.get("user_id", [None])[0]
     if not st.session_state['user_id']:
         import hashlib
