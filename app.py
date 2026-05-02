@@ -29,7 +29,7 @@ if 'user_id' not in st.session_state:
                 }
                 </script>
                 """, unsafe_allow_html=True)
-    user_id_from_url = st.query_params.get("user_id", [None])[0]
+    user_id_from_url = st.query_params.get("user_id", None)
     if user_id_from_url:
         st.session_state['user_id'] = user_id_from_url
     else:
