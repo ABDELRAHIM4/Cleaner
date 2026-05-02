@@ -121,7 +121,7 @@ def check_payment_status():
     query_params = st.query_params
     if query_params.get("payment") == 'success':
         users_collection.update_one(
-            {"user_id": st.session_state['user_id']}
+            {"email": st.session_state['user_email']}
             ,{"$inc": {"paid_uses": 1}}
         )
         st.session_state['paid_uses'] += 1
@@ -180,19 +180,19 @@ if uploaded_file is not None:
         if download_csv or download_excel:
             if st.session_state['free_uses_left'] > 0:
                users_collection.update_one(
-            {"user_id": st.session_state['user_id']}
+            {"email": st.session_state['user_email']}
             ,{"$inc": {"free_uses_left": -1}}
         )
                st.session_state['free_uses_left'] -= 1
                st.success(f"{st.session_state['free_uses_left']} free uses left")
             elif st.session_state['paid_uses'] > 0:
                 users_collection.update_one(
-            {"user_id": st.session_state['user_id']}
+            {"email": st.session_state['user_email']}
             ,{"$inc": {"paid_uses": -1}}
                 )
                 st.session_state['paid_uses'] -= 1
                 st.success(f"{st.session_state['paid_uses']} paid uses left")
-            st.balloons()
+                st.balloons()
             st.rerun()
             
     else:
