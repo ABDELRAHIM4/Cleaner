@@ -13,42 +13,39 @@ st.title('CSV Cleaner :smiley:')
 st.markdown('''
 This app allows you to clean your CSV files by removing empty rows and columns, and filling missing values with a specified value.
 ''')
-if 'user_id' not in st.session_state:
-    # Try to get user_id from javascript cookies
-    st.markdown("""
-                <script>
-                let user_id = localStorage.getItem('csv_cleaner_user_id')
-                if (!user_id){
-                user_id = 'user_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('csv_cleaner_user_id', user_id);
-                }
-                const url = new URL(window.location.href);
-                if (!url.searchParams.get("user_id")){
-                url.searchParams.set("user_id", localStorage.getItem('csv_cleaner_user_id'));
-                window.location.href = url.toString();
-                }
-                </script>
-                """, unsafe_allow_html=True)
-    user_id_from_url = st.query_params.get("user_id", None)
-    if user_id_from_url:
-        st.session_state['user_id'] = user_id_from_url
+if 'user_email' not in st.session_state:
+    st.subheader("login or sign up")
+    email = st.text_input("enter your email")
+    if email:
+        if '@' not in email or '.' not in email:
+            st.error("Enter valid email")
+        else:
+            user_data = users_collection.find_one({ "email": email.lower()})
+            if not user_data:
+                users_collection.insert_one({
+                    "email": email.lower(),
+                    "free_uses_left": 3,
+                    "paid_uses": 0,
+                    "created_at": pd.Timestamp.now()
+                })
+                st.session_state['user_email'] = email.lower()
+                st.session_state["free_uses_left"] = 3
+                st.session_state["paid_uses"] = 0
+                st.success("welcome")
+                st.rerun()
+            else:
+                st.session_state['user_email'] = email.lower()
+                st.session_state["free_uses_left"] = user_data["free_uses_left"]
+                st.session_state["paid_uses"] = user_data["paid_uses"]
+                st.success("welcome back")
+                st.rerun()
     else:
-        system_info = f"{platform.node()}_{platform.system()}_{platform.release()}"
-        st.session_state['user_id'] = hashlib.md5(system_info.encode()).hexdigest()
-    
-user_data = users_collection.find_one({"user_id": st.session_state['user_id']})
-if not user_data:
-    users_collection.insert_one({
-        "user_id": st.session_state['user_id'],
-        "free_uses_left": 3,
-        "paid_uses": 0
-    })
-    user_data = users_collection.find_one({"user_id": st.session_state['user_id']})
-st.session_state['free_uses_left'] = user_data['free_uses_left']
-st.session_state['paid_uses'] = user_data['paid_uses']
-
-
-
+        st.info("Enter email")
+        st.stop()
+user_data =  users_collection.find_one({ "email": st.session_state['user_email']})
+if user_data:
+    st.session_state["free_uses_left"] = user_data["free_uses_left"]
+    st.session_state["paid_uses"] = user_data["paid_uses"]
 
 STRIPE_READY = False
 PAYMENT_LINK = "https://buy.stripe.com/test_eVq5kFakObqqaMDafOdfG01"
